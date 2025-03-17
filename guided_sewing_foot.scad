@@ -11,24 +11,23 @@ matic_offset_dy = 5.0;
 matic_handle_width = 6.1; 
 
 // The X offset between the needle and the center of the MATIC handle on Janome machines with a maximum stitch width of 7 mm 
-janome_matic_offset_dx = -0.75; 
+janome_matic_offset_dx = -0.75;
 
-// The distance between the needle and the guide
-guide_offset = 2.5;
+// The width of the transport mechanism in the Janome machines
+janome_transport_width = 16.0;
 
-// The nominal lenth of the needle tunnel (the maximal usable stich width)
-needle_tunnel_length = 3.5;
+needle_tunnel_length_max = 7.0;
+needle_tunnel_margin = 4.0;
 
-// The distance between the needle and the non-guided edge
-secondary_width = 8.0;
+foot_base_leftside_width = janome_transport_width / 2;
+foot_base_rightside_width_full = janome_transport_width / 2;
 
 guide_min_width = 1.6;
 ear_width = 3.5;
 
-guide_depth = 1.0;
 foot_base_height = 3.2;
 
-primary_front_length = 6.0;
+primary_front_length = 5.0;
 primary_back_length = 16.0;
 
 short_guide_front_length = 2.0;
@@ -156,24 +155,28 @@ module make_needle_tunnel_cutter(
     }
 }
 
-module needle_tunnel_cutter_global() {
-    make_needle_tunnel_cutter(
-        length = needle_tunnel_length,
-        width = 2.5
-    );
-}
+module make_guided_foot(
+    // The distance between the needle and the guide
+    guide_offset,
+    guide_depth = 0.8,
+    use_full_width = true,
+    use_full_length = false,
+) {
+    guide_front_length = use_full_length ? primary_front_length : short_guide_front_length;
+    guide_back_length = use_full_length ? primary_back_length : short_guide_back_length;
 
-module make_guided_foot() {
-    guide_front_length = short_guide_front_length;
-    guide_back_length = short_guide_back_length;
+    foot_base_rightside_width_free = use_full_width ? foot_base_rightside_width_full : right_ear_edge_x;
+    foot_base_rightside_width = max(guide_offset, foot_base_rightside_width_free);
+    guide_width = max(foot_base_rightside_width - guide_offset, guide_min_width);
 
-    right_foot_base_edge_x = max(guide_offset, right_ear_edge_x);
-    guide_width = max(right_foot_base_edge_x - guide_offset, guide_min_width);
+    // The nominal lenth of the needle tunnel (the maximal usable stich width)
+    needle_tunnel_length_safe = (foot_base_rightside_width - needle_tunnel_margin) * 2;
+    needle_tunnel_length = min(needle_tunnel_length_safe, needle_tunnel_length_max);
 
     module foot_base_global() {
-        translate([-secondary_width, 0, 0])
+        translate([-foot_base_leftside_width, 0, 0])
         make_wing(
-            width = secondary_width + right_foot_base_edge_x,
+            width = foot_base_leftside_width + foot_base_rightside_width,
             front_length = primary_front_length,
             back_length = primary_back_length
         );
@@ -205,7 +208,16 @@ module make_guided_foot() {
         ears_piece_global();
     }
 
+    module needle_tunnel_cutter_global() {
+        make_needle_tunnel_cutter(
+            length = needle_tunnel_length,
+            width = 2.5
+        );
+    }
+
     guided_foot_global();
 }
 
-make_guided_foot();
+make_guided_foot(
+    guide_offset = 2.5
+);
