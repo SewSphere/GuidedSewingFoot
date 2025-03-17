@@ -6,9 +6,11 @@ TEMPLATE = guided_sewing_foot_template.scad
 
 # Source files
 SCAD_FILES = \
-	guided_sewing_foot_2_5mm.scad \
-	guided_sewing_foot_8mm.scad \
-	guided_sewing_foot_9_25mm.scad
+	guided_sewing_foot_edge_2_5mm.scad \
+	guided_sewing_foot_edge_8mm.scad \
+	guided_sewing_foot_edge_9_25mm.scad \
+	guided_sewing_foot_top_stitch_2_5mm.scad \
+	guided_sewing_foot_tunnel.scad
 
 # Output directory
 OUT_DIR = out

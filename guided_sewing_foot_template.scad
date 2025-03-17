@@ -158,7 +158,9 @@ module make_needle_tunnel_cutter(
 module make_guided_foot(
     // The distance between the needle and the guide
     guide_offset,
+    secondary_guide_offset = undef,
     guide_depth = 0.8,
+    needle_tunnel_length_limit = needle_tunnel_length_max,
     use_full_width = true,
     use_full_length = false,
 ) {
@@ -167,11 +169,25 @@ module make_guided_foot(
 
     foot_base_rightside_width_free = use_full_width ? foot_base_rightside_width_full : right_ear_edge_x;
     foot_base_rightside_width = max(guide_offset, foot_base_rightside_width_free);
-    guide_width = max(foot_base_rightside_width - guide_offset, guide_min_width);
 
     // The nominal lenth of the needle tunnel (the maximal usable stich width)
     needle_tunnel_length_safe = (foot_base_rightside_width - needle_tunnel_margin) * 2;
-    needle_tunnel_length = min(needle_tunnel_length_safe, needle_tunnel_length_max);
+    needle_tunnel_length_effective_max = min(needle_tunnel_length_limit, needle_tunnel_length_max);
+    needle_tunnel_length = min(needle_tunnel_length_safe, needle_tunnel_length_effective_max);
+
+    module make_guide(
+        offset,
+        base_side_width,
+    ) {
+        width = max(foot_base_rightside_width - offset, guide_min_width);
+
+        translate([offset, 0, -guide_depth])
+        make_wing(
+            width = width,
+            front_length = guide_front_length,
+            back_length = guide_back_length
+        );
+    }
 
     module foot_base_global() {
         translate([-foot_base_leftside_width, 0, 0])
@@ -183,12 +199,20 @@ module make_guided_foot(
     }
 
     module guide_global() {
-        translate([guide_offset, 0, -guide_depth])
-        make_wing(
-            width = guide_width,
-            front_length = guide_front_length,
-            back_length = guide_back_length
+        make_guide(
+            offset = guide_offset,
+            base_side_width = foot_base_rightside_width
         );
+    }
+
+    module secondary_guide_global() {
+        if (!is_undef(secondary_guide_offset)) {
+            scale([-1, 1, 1])
+            make_guide(
+                offset = secondary_guide_offset,
+                base_side_width = foot_base_leftside_width
+            );
+        }
     }
 
     module guided_foot_global() {
@@ -197,6 +221,7 @@ module make_guided_foot(
                 union() {
                     foot_base_global();
                     guide_global();
+                    secondary_guide_global();
                 }
 
                 top_cutter_global();
