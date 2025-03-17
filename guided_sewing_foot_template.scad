@@ -217,7 +217,3 @@ module make_guided_foot(
 
     guided_foot_global();
 }
-
-make_guided_foot(
-    guide_offset = 2.5
-);
